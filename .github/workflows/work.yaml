@@ -22,14 +22,15 @@ jobs:
 
     - name: Install Chrome
       run: |
-        CHROME_VERSION=103.0.5060.53
+        CHROME_VERSION=$(curl -s https://omahaproxy.appspot.com/linux)
         wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
         sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get install -f
         sudo apt-get install -y google-chrome-stable
 
     - name: Install ChromeDriver
       run: |
-        wget https://storage.googleapis.com/chrome-for-testing-public/130.0.6723.91/linux64/chromedriver-linux64.zip
+        CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION)
+        wget https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
         unzip chromedriver-linux64.zip
         cd chromedriver-linux64
         chmod +x chromedriver
