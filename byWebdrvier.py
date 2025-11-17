@@ -28,7 +28,12 @@ else:
 complete = []
 driver = None
 try:
-    driver = webdriver.Chrome()
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # 如果你在无头模式下运行
+    chrome_options.add_argument("--no-sandbox")  # 解决一些权限问题
+    chrome_options.add_argument("--disable-dev-shm-usage")  # 解决共享内存问题
+    service = Service(rf'/usr/local/bin/chromedriver')
+    driver = webdriver.Chrome(service=service, options=chrome_options)
     driver.get("https://www.south-plus.net/index.php")
     for cookie in cookies:
         if 'sameSite' in cookie and cookie['sameSite'] not in ['Strict', 'Lax', 'None']:
