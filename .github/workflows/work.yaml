@@ -22,22 +22,54 @@ jobs:
 
     - name: Install Chrome
       run: |
-        CHROME_VERSION=$(curl -s "https://omahaproxy.appspot.com/all.json?os=linux&channel=stable" | grep -o '"version":"[^"]*' | cut -d'"' -f4 | head -1)
-        echo "Latest Chrome version: $CHROME_VERSION"
+        # 下载最新的稳定版 Chrome .deb 包
         wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get install -f
-        sudo apt-get install -y google-chrome-stable
+        
+        # 使用 apt 安装，它会自动处理依赖
+        sudo apt-get update
+        sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
+        
+        # 清理下载的文件
+        rm google-chrome-stable_current_amd64.deb
+        
+        # 验证安装
+        echo "Chrome anstalled:"
+        google-chrome-stable --version
 
     - name: Install ChromeDriver
       run: |
-        CHROME_MAJOR_VERSION=$(echo $CHROME_VERSION | cut -d. -f1)
-        CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_MAJOR_VERSION") 
-        echo "Matching ChromeDriver version: $CHROMEDRIVER_VERSION"
-        wget https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
+        # 安装必要的工具 (curl 用于 API 请求, jq 用于解析 JSON, unzip 用于解压)
+        sudo apt-get update
+        sudo apt-get install -y curl jq unzip
+
+        # 1. 从官方 JSON API 获取最新的 "Stable" 频道版本号
+        LATEST_STABLE_VERSION=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json | jq -r '.channels.Stable.version')
+        
+        if [ -z "$LATEST_STABLE_VERSION" ]; then
+          echo "Failed to fetch latest stable version"
+          exit 1
+        fi
+
+        echo "Fetching latest stable ChromeDriver, version: $LATEST_STABLE_VERSION"
+
+        # 2. 构建下载 URL 并下载
+        wget "https://storage.googleapis.com/chrome-for-testing-public/${LATEST_STABLE_VERSION}/linux64/chromedriver-linux64.zip"
+
+        # 3. 解压并移动到系统路径
         unzip chromedriver-linux64.zip
-        cd chromedriver-linux64
-        chmod +x chromedriver
-        sudo mv chromedriver /usr/local/bin/
+        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
+        
+        # 4. 设置正确的权限
+        sudo chown root:root /usr/local/bin/chromedriver
+        sudo chmod +x /usr/local/bin/chromedriver
+
+        # 5. 清理下载的文件
+        rm chromedriver-linux64.zip
+        rm -rf chromedriver-linux64
+
+        # 6. 验证安装
+        echo "ChromeDriver installed:"
+        chromedriver --version
 
     - name: 总脚本
       env:
