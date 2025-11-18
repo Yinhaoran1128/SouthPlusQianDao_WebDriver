@@ -14,7 +14,9 @@ task_page_url = "https://www.south-plus.net/plugin.php?H_name-tasks.html.html"
 get_reward_url = "https://www.south-plus.net/plugin.php?H_name-tasks-actions-newtasks.html.html"
 
 XPATH_WEEK = "//a[@onclick=\"startjob('14');\"]"
+XPATH_WEEK_DONE = "//td[text()='上次领取未超过158小时']"
 XPATH_DAY = "//a[@onclick=\"startjob('15');\"]"
+XPATH_DAY_DONE = "//td[text()='上次领取未超过18小时']"
 
 serverKey = os.environ.get('serverKey')
 cookie_json = os.environ.get('COOKIE')
@@ -49,7 +51,7 @@ try:
     print(f"正在打开任务页面: {task_page_url}")
     driver.get(task_page_url)
     print("等待日常申请任务按钮出现")
-    wait = WebDriverWait(driver, 5)
+    wait = WebDriverWait(driver, 10)
     try:
         button = wait.until(
             EC.element_to_be_clickable((By.XPATH, XPATH_DAY))
@@ -57,15 +59,18 @@ try:
         button.click()
         print("日常任务申请成功。")
         complete.append('日常任务申请')
-    except Exception as e:
-        print(f"日常任务申请失败/已领取/已完成: {e}")
+    except Exception:
+        try:
+            driver.find_element(By.XPATH, XPATH_DAY_DONE)
+            print("日常任务已领取")
+        except NoSuchElementException:
+            raise Exception("加载失败")
     time.sleep(2)
 
     print("等待页面刷新")
     driver.refresh()
 
     print("等待周常申请任务按钮出现")
-    wait = WebDriverWait(driver, 5)
     try:
         button = wait.until(
             EC.element_to_be_clickable((By.XPATH, XPATH_WEEK))
@@ -73,15 +78,18 @@ try:
         button.click()
         print("周常任务申请成功。")
         complete.append('周常任务申请')
-    except Exception as e:
-        print(f"周常任务申请失败/已领取/已完成: {e}")
+    except Exception:
+        try:
+            driver.find_element(By.XPATH, XPATH_WEEK_DONE)
+            print("周常任务已领取")
+        except NoSuchElementException:
+            raise Exception("加载失败")
     time.sleep(2)
 
     # 领取奖励
     print(f"正在打开领取奖励页面: {get_reward_url}")
     driver.get(get_reward_url)
     print("等待日常领取奖励按钮出现")
-    wait = WebDriverWait(driver, 5)
     try:
         button = wait.until(
             EC.element_to_be_clickable((By.XPATH, XPATH_DAY))
@@ -97,7 +105,6 @@ try:
     driver.refresh()
 
     print("等待周常领取奖励按钮出现")
-    wait = WebDriverWait(driver, 5)
     try:
         button = wait.until(
             EC.element_to_be_clickable((By.XPATH, XPATH_WEEK))
