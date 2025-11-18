@@ -9,6 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import NoSuchElementException
 
 task_page_url = "https://www.south-plus.net/plugin.php?H_name-tasks.html.html"
 get_reward_url = "https://www.south-plus.net/plugin.php?H_name-tasks-actions-newtasks.html.html"
