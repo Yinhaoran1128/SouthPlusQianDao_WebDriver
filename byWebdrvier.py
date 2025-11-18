@@ -34,7 +34,7 @@ complete = []
 driver = None
 try:
     chrome_options = Options()
-    # chrome_options.add_argument("--headless")  # 如果你在无头模式下运行
+    chrome_options.add_argument("--headless")  # 如果你在无头模式下运行
     chrome_options.add_argument("--no-sandbox")  # 解决一些权限问题
     chrome_options.add_argument("--disable-dev-shm-usage")  # 解决共享内存问题
 
