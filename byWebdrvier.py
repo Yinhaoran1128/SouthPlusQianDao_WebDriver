@@ -34,25 +34,37 @@ complete = []
 driver = None
 try:
     chrome_options = Options()
-    chrome_options.add_argument("--headless")  # 如果你在无头模式下运行
+    # chrome_options.add_argument("--headless")  # 如果你在无头模式下运行
     chrome_options.add_argument("--no-sandbox")  # 解决一些权限问题
     chrome_options.add_argument("--disable-dev-shm-usage")  # 解决共享内存问题
+
+    # 重要的伪装选项
+    chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    chrome_options.add_experimental_option('useAutomationExtension', False)
+    
+    # 添加用户代理
+    chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+    
     service = Service(rf'/usr/local/bin/chromedriver')
     driver = webdriver.Chrome(service=service, options=chrome_options)
+    # 执行脚本来移除自动化特征
+    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
     driver.get("https://www.south-plus.net/index.php")
     for cookie in cookies:
         if 'sameSite' in cookie and cookie['sameSite'] not in ['Strict', 'Lax', 'None']:
             cookie['sameSite'] = 'Lax'  # 或者 'None'，根据需要尝试
         driver.add_cookie(cookie)
     print("Cookies 加载完毕。")
+    time.sleep(5)
     driver.refresh()
-    time.sleep(2)
+    time.sleep(5)
 
     # 领取任务
     print(f"正在打开任务页面: {task_page_url}")
     driver.get(task_page_url)
     print("等待日常申请任务按钮出现")
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, 20)
     try:
         button = wait.until(
             EC.element_to_be_clickable((By.XPATH, XPATH_DAY))
@@ -67,7 +79,7 @@ try:
         except NoSuchElementException:
             print(driver.page_source)
             raise Exception("加载失败")
-    time.sleep(2)
+    time.sleep(5)
 
     print("等待页面刷新")
     driver.refresh()
@@ -86,7 +98,7 @@ try:
             print("周常任务已领取")
         except NoSuchElementException:
             raise Exception("加载失败")
-    time.sleep(2)
+    time.sleep(5)
 
     # 领取奖励
     print(f"正在打开领取奖励页面: {get_reward_url}")
@@ -101,7 +113,7 @@ try:
         complete.append('日常任务领奖')
     except Exception as e:
         print(f"日常任务领取奖励失败/已领取: {e}")
-    time.sleep(2)
+    time.sleep(5)
 
     print("等待页面刷新")
     driver.refresh()
@@ -116,10 +128,6 @@ try:
         complete.append('周常任务领奖')
     except Exception as e:
         print(f"周常任务领取奖励失败/已领取: {e}")
-    time.sleep(2)
-
-    print("5秒后自动关闭浏览器...")
-    time.sleep(5)
 
 except FileNotFoundError:
     print("错误：未找到 cookies.json 文件。")
