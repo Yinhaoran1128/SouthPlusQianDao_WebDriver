@@ -65,6 +65,7 @@ try:
             driver.find_element(By.XPATH, XPATH_DAY_DONE)
             print("日常任务已领取")
         except NoSuchElementException:
+            print(driver.page_source)
             raise Exception("加载失败")
     time.sleep(2)
 
